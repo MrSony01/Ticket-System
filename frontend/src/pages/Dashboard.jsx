@@ -87,7 +87,7 @@ export default function Dashboard() {
                   <p className="font-semibold text-gray-800 truncate">{ticket.title}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
                     #{ticket.id} · {ticket.creator_name}
-                    {ticket.agent_name && ` · Asignado a ${ticket.agent_name}`}
+                    {ticket.assignee_name && ` · Asignado a ${ticket.assignee_name}`}
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">

@@ -1,142 +1,92 @@
 import pool from '../config/db.js';
 
-// Columnas base reutilizadas en listado y detalle
 const TICKET_COLS = `
-  t.id, t.company_id, t.title, t.description, t.priority, t.status,
-  t.created_at, t.updated_at, t.resolved_at,
+  t.id, t.title, t.description, t.status, t.priority,
+  t.created_at, t.updated_at,
   c.name  AS category,
-  u.id    AS creator_id,   u.name  AS creator_name,
-  a.id    AS agent_id,     a.name  AS agent_name
+  u.id    AS creator_id,  u.name AS creator_name,
+  a.id    AS assignee_id, a.name AS assignee_name
 `;
 
 const TICKET_JOINS = `
   FROM tickets t
   LEFT JOIN categories c ON c.id = t.category_id
-  JOIN  users u           ON u.id = t.created_by
-  LEFT JOIN users a       ON a.id = t.assigned_to
+  JOIN  users u          ON u.id = t.user_id
+  LEFT JOIN users a      ON a.id = t.assigned_to
 `;
 
-export async function findAll(companyId, userId, role) {
-  let whereExtra = '';
-  const params = [companyId];
+export async function findAll(userId, role) {
+  let where = 'WHERE 1=1';
+  const params = [];
 
   if (role === 'user') {
-    whereExtra = 'AND t.created_by = ?';
+    where += ' AND t.user_id = ?';
     params.push(userId);
-  } else if (role === 'agent') {
-    whereExtra = 'AND t.assigned_to = ?';
+  } else if (role === 'technician') {
+    where += ' AND t.assigned_to = ?';
     params.push(userId);
   }
-  // manager y admin ven todos los tickets de la empresa
+  // admin ve todos
 
   const [rows] = await pool.execute(
-    `SELECT ${TICKET_COLS} ${TICKET_JOINS}
-     WHERE t.company_id = ? ${whereExtra}
-     ORDER BY t.created_at DESC`,
+    `SELECT ${TICKET_COLS} ${TICKET_JOINS} ${where} ORDER BY t.created_at DESC`,
     params
   );
   return rows;
 }
 
-export async function findById(id, companyId) {
+export async function findById(id) {
   const [[ticket]] = await pool.execute(
-    `SELECT ${TICKET_COLS} ${TICKET_JOINS}
-     WHERE t.id = ? AND t.company_id = ?`,
-    [id, companyId]
+    `SELECT ${TICKET_COLS} ${TICKET_JOINS} WHERE t.id = ?`,
+    [id]
   );
   if (!ticket) return null;
 
   const [comments] = await pool.execute(
-    `SELECT cm.id, cm.body, cm.internal, cm.created_at,
-            u.id AS user_id, u.name AS user_name, r.name AS user_role
+    `SELECT cm.id, cm.content, cm.is_internal, cm.created_at,
+            u.id AS user_id, u.name AS user_name, u.role AS user_role
      FROM comments cm
      JOIN users u ON u.id = cm.user_id
-     JOIN roles  r ON r.id = u.role_id
      WHERE cm.ticket_id = ?
      ORDER BY cm.created_at ASC`,
     [id]
   );
 
-  const [history] = await pool.execute(
-    `SELECT th.field, th.old_value, th.new_value, th.changed_at,
-            u.name AS changed_by
-     FROM ticket_history th
-     JOIN users u ON u.id = th.changed_by
-     WHERE th.ticket_id = ?
-     ORDER BY th.changed_at ASC`,
-    [id]
-  );
-
-  return { ...ticket, comments, history };
+  return { ...ticket, comments };
 }
 
-export async function create({ companyId, categoryId, createdBy, title, description, priority }) {
+export async function create({ title, description, priority, categoryId, userId }) {
   const [result] = await pool.execute(
-    `INSERT INTO tickets (company_id, category_id, created_by, title, description, priority)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [companyId, categoryId ?? null, createdBy, title, description, priority ?? 'medium']
+    'INSERT INTO tickets (title, description, priority, category_id, user_id) VALUES (?, ?, ?, ?, ?)',
+    [title, description, priority ?? 'medium', categoryId ?? null, userId]
   );
   return result.insertId;
 }
 
-export async function update(id, companyId, fields, changedBy) {
+export async function update(id, fields) {
   const allowed = ['status', 'priority', 'assigned_to', 'category_id'];
   const updates = [];
   const values  = [];
-  const historyRows = [];
-
-  // Obtener valores actuales para el historial
-  const [[current]] = await pool.execute(
-    'SELECT status, priority, assigned_to, category_id FROM tickets WHERE id = ? AND company_id = ?',
-    [id, companyId]
-  );
-  if (!current) return null;
 
   for (const field of allowed) {
     if (fields[field] === undefined) continue;
-    if (String(fields[field]) === String(current[field] ?? '')) continue; // sin cambio real
-
     updates.push(`${field} = ?`);
     values.push(fields[field]);
-    historyRows.push([id, changedBy, field, current[field] ?? null, fields[field]]);
   }
 
   if (updates.length === 0) return id;
 
-  if (fields.status === 'resolved') {
-    updates.push('resolved_at = NOW()');
-  }
-
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-
-    await conn.execute(
-      `UPDATE tickets SET ${updates.join(', ')} WHERE id = ? AND company_id = ?`,
-      [...values, id, companyId]
-    );
-
-    if (historyRows.length > 0) {
-      await conn.query(
-        'INSERT INTO ticket_history (ticket_id, changed_by, field, old_value, new_value) VALUES ?',
-        [historyRows]
-      );
-    }
-
-    await conn.commit();
-    return id;
-  } catch (err) {
-    await conn.rollback();
-    throw err;
-  } finally {
-    conn.release();
-  }
+  await pool.execute(
+    `UPDATE tickets SET ${updates.join(', ')} WHERE id = ?`,
+    [...values, id]
+  );
+  return id;
 }
 
-export async function addComment(ticketId, userId, body, internal = false) {
+export async function addComment(ticketId, userId, content, isInternal = false) {
   const [result] = await pool.execute(
-    'INSERT INTO comments (ticket_id, user_id, body, internal) VALUES (?, ?, ?, ?)',
-    [ticketId, userId, body, internal]
+    'INSERT INTO comments (ticket_id, user_id, content, is_internal) VALUES (?, ?, ?, ?)',
+    [ticketId, userId, content, isInternal]
   );
   return result.insertId;
 }

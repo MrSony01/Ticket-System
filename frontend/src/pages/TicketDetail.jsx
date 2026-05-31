@@ -20,11 +20,12 @@ export default function TicketDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
   const [comment, setComment] = useState('');
-  const [internal, setInternal] = useState(false);
+  const [isInternal, setIsInternal] = useState(false);
   const [saving, setSaving]   = useState(false);
 
-  const canManage = ['admin', 'manager'].includes(user?.role);
-  const canUpdate = ['admin', 'manager', 'agent'].includes(user?.role);
+  const isAdmin      = user?.role === 'admin';
+  const isTechnician = user?.role === 'technician';
+  const canUpdate    = isAdmin || isTechnician;
 
   async function load() {
     try {
@@ -49,8 +50,9 @@ export default function TicketDetail() {
   }
 
   async function handleAssign(e) {
+    const val = e.target.value;
     try {
-      await api.patch(`/tickets/${id}`, { assigned_to: e.target.value || null });
+      await api.patch(`/tickets/${id}`, { assigned_to: val ? Number(val) : null });
       load();
     } catch (err) {
       alert(err.message);
@@ -62,9 +64,9 @@ export default function TicketDetail() {
     if (!comment.trim()) return;
     setSaving(true);
     try {
-      await api.post(`/tickets/${id}/comments`, { body: comment, internal });
+      await api.post(`/tickets/${id}/comments`, { content: comment, is_internal: isInternal });
       setComment('');
-      setInternal(false);
+      setIsInternal(false);
       load();
     } catch (err) {
       alert(err.message);
@@ -94,12 +96,13 @@ export default function TicketDetail() {
         <div className="text-xs text-gray-400 flex flex-wrap gap-4">
           <span>Creado por <strong className="text-gray-600">{ticket.creator_name}</strong></span>
           <span>Prioridad <strong className="text-gray-600">{PRIORITY_LABELS[ticket.priority]}</strong></span>
-          {ticket.category && <span>Categoría <strong className="text-gray-600">{ticket.category}</strong></span>}
+          {ticket.category    && <span>Categoría <strong className="text-gray-600">{ticket.category}</strong></span>}
+          {ticket.assignee_name && <span>Asignado a <strong className="text-gray-600">{ticket.assignee_name}</strong></span>}
           <span>{new Date(ticket.created_at).toLocaleDateString('es', { dateStyle: 'medium' })}</span>
         </div>
       </div>
 
-      {/* Acciones para agentes/managers/admins */}
+      {/* Acciones para técnicos y admins */}
       {canUpdate && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap gap-4">
           <div>
@@ -116,34 +119,18 @@ export default function TicketDetail() {
             </select>
           </div>
 
-          {canManage && (
+          {isAdmin && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Agente asignado (ID)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1">ID del técnico asignado</label>
               <input
                 type="number"
-                defaultValue={ticket.agent_id ?? ''}
+                defaultValue={ticket.assignee_id ?? ''}
                 onBlur={handleAssign}
-                placeholder="ID del agente"
-                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="ID del técnico"
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           )}
-        </div>
-      )}
-
-      {/* Historial de cambios */}
-      {ticket.history.length > 0 && (
-        <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-          <h2 className="text-sm font-semibold text-gray-600 mb-3">Historial</h2>
-          <ul className="space-y-1.5">
-            {ticket.history.map((h, i) => (
-              <li key={i} className="text-xs text-gray-500">
-                <span className="font-medium text-gray-700">{h.changed_by}</span>
-                {' '}cambió <em>{h.field}</em> de <strong>{h.old_value ?? '—'}</strong> a <strong>{h.new_value}</strong>
-                {' · '}{new Date(h.changed_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })}
-              </li>
-            ))}
-          </ul>
         </div>
       )}
 
@@ -161,17 +148,19 @@ export default function TicketDetail() {
           {ticket.comments.map(c => (
             <li
               key={c.id}
-              className={`rounded-lg px-4 py-3 text-sm ${c.internal ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50'}`}
+              className={`rounded-lg px-4 py-3 text-sm ${c.is_internal ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50'}`}
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold text-gray-700">{c.user_name}</span>
                 <span className="text-xs text-gray-400">{c.user_role}</span>
-                {c.internal && <span className="text-xs bg-yellow-200 text-yellow-700 px-1.5 rounded">Nota interna</span>}
+                {c.is_internal && (
+                  <span className="text-xs bg-yellow-200 text-yellow-700 px-1.5 rounded">Nota interna</span>
+                )}
                 <span className="text-xs text-gray-400 ml-auto">
                   {new Date(c.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })}
                 </span>
               </div>
-              <p className="text-gray-600 whitespace-pre-wrap">{c.body}</p>
+              <p className="text-gray-600 whitespace-pre-wrap">{c.content}</p>
             </li>
           ))}
         </ul>
@@ -189,8 +178,8 @@ export default function TicketDetail() {
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={internal}
-                  onChange={e => setInternal(e.target.checked)}
+                  checked={isInternal}
+                  onChange={e => setIsInternal(e.target.checked)}
                   className="accent-yellow-500"
                 />
                 Nota interna

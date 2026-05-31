@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 
 export default function CreateTicket() {
   const navigate = useNavigate();
 
-  const [form, setForm]       = useState({ title: '', description: '', priority: 'medium' });
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
+  const [form, setForm]           = useState({ title: '', description: '', priority: 'medium', categoryId: '' });
+  const [categories, setCategories] = useState([]);
+  const [error, setError]         = useState('');
+  const [loading, setLoading]     = useState(false);
+
+  useEffect(() => {
+    api.get('/categories').then(setCategories).catch(() => {});
+  }, []);
 
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -18,7 +23,13 @@ export default function CreateTicket() {
     setError('');
     setLoading(true);
     try {
-      const { id } = await api.post('/tickets', form);
+      const payload = {
+        title:       form.title,
+        description: form.description,
+        priority:    form.priority,
+        categoryId:  form.categoryId ? Number(form.categoryId) : undefined,
+      };
+      const { id } = await api.post('/tickets', payload);
       navigate(`/tickets/${id}`);
     } catch (err) {
       setError(err.message);
@@ -49,6 +60,7 @@ export default function CreateTicket() {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
           <textarea
@@ -61,19 +73,39 @@ export default function CreateTicket() {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
-          <select
-            name="priority"
-            value={form.priority}
-            onChange={handleChange}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="low">Baja</option>
-            <option value="medium">Media</option>
-            <option value="high">Alta</option>
-            <option value="critical">Crítica</option>
-          </select>
+
+        <div className="flex gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+            <select
+              name="priority"
+              value={form.priority}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="low">Baja</option>
+              <option value="medium">Media</option>
+              <option value="high">Alta</option>
+              <option value="critical">Crítica</option>
+            </select>
+          </div>
+
+          {categories.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+              <select
+                name="categoryId"
+                value={form.categoryId}
+                onChange={handleChange}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Sin categoría</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 pt-2">

@@ -16,9 +16,9 @@ router.use(authenticate);
 router.get('/',    getTickets);
 router.get('/:id', getTicket);
 
-router.post('/', authorize('user', 'agent', 'manager', 'admin'), createTicket);
+router.post('/', authorize('user', 'technician', 'admin'), createTicket);
 
-router.patch('/:id',          authorize('agent', 'manager', 'admin'), updateTicket);
-router.post('/:id/comments',  authorize('user', 'agent', 'manager', 'admin'), commentTicket);
+router.patch('/:id',         authorize('technician', 'admin'), updateTicket);
+router.post('/:id/comments', authorize('user', 'technician', 'admin'), commentTicket);
 
 export default router;
