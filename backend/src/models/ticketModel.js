@@ -15,9 +15,9 @@ const TICKET_JOINS = `
   LEFT JOIN users a      ON a.id = t.assigned_to
 `;
 
-export async function findAll(userId, role) {
-  let where = 'WHERE 1=1';
-  const params = [];
+export async function findAll(userId, role, companyId) {
+  let where = 'WHERE t.company_id = ?';
+  const params = [companyId];
 
   if (role === 'user') {
     where += ' AND t.user_id = ?';
@@ -26,7 +26,6 @@ export async function findAll(userId, role) {
     where += ' AND t.assigned_to = ?';
     params.push(userId);
   }
-  // admin ve todos
 
   const [rows] = await pool.execute(
     `SELECT ${TICKET_COLS} ${TICKET_JOINS} ${where} ORDER BY t.created_at DESC`,
@@ -35,10 +34,10 @@ export async function findAll(userId, role) {
   return rows;
 }
 
-export async function findById(id) {
+export async function findById(id, companyId) {
   const [[ticket]] = await pool.execute(
-    `SELECT ${TICKET_COLS} ${TICKET_JOINS} WHERE t.id = ?`,
-    [id]
+    `SELECT ${TICKET_COLS} ${TICKET_JOINS} WHERE t.id = ? AND t.company_id = ?`,
+    [id, companyId]
   );
   if (!ticket) return null;
 
@@ -55,15 +54,15 @@ export async function findById(id) {
   return { ...ticket, comments };
 }
 
-export async function create({ title, description, priority, categoryId, userId }) {
+export async function create({ title, description, priority, categoryId, userId, companyId }) {
   const [result] = await pool.execute(
-    'INSERT INTO tickets (title, description, priority, category_id, user_id) VALUES (?, ?, ?, ?, ?)',
-    [title, description, priority ?? 'medium', categoryId ?? null, userId]
+    'INSERT INTO tickets (title, description, priority, category_id, user_id, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+    [title, description, priority ?? 'medium', categoryId ?? null, userId, companyId]
   );
   return result.insertId;
 }
 
-export async function update(id, fields) {
+export async function update(id, companyId, fields) {
   const allowed = ['status', 'priority', 'assigned_to', 'category_id'];
   const updates = [];
   const values  = [];
@@ -77,8 +76,8 @@ export async function update(id, fields) {
   if (updates.length === 0) return id;
 
   await pool.execute(
-    `UPDATE tickets SET ${updates.join(', ')} WHERE id = ?`,
-    [...values, id]
+    `UPDATE tickets SET ${updates.join(', ')} WHERE id = ? AND company_id = ?`,
+    [...values, id, companyId]
   );
   return id;
 }

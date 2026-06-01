@@ -1,20 +1,31 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Navbar from './components/Navbar';
+import AdminRoute from './components/AdminRoute';
+import Sidebar from './components/Sidebar';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import CreateTicket from './pages/CreateTicket';
 import TicketDetail from './pages/TicketDetail';
+import AdminUsers from './pages/AdminUsers';
 
-function Layout({ children }) {
+function AppLayout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar />
-      <main className="py-6">{children}</main>
+    <div className="min-h-screen bg-slate-950 flex">
+      <Sidebar />
+      <main className="ml-60 flex-1 min-h-screen overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
+}
+
+function PublicHome() {
+  const { token } = useAuth();
+  return token ? <Navigate to="/dashboard" replace /> : <Landing />;
 }
 
 export default function App() {
@@ -22,25 +33,32 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/"         element={<PublicHome />} />
           <Route path="/login"    element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          <Route path="/" element={
+          <Route path="/dashboard" element={
             <ProtectedRoute>
-              <Layout><Dashboard /></Layout>
+              <AppLayout><Dashboard /></AppLayout>
             </ProtectedRoute>
           } />
 
           <Route path="/tickets/new" element={
             <ProtectedRoute>
-              <Layout><CreateTicket /></Layout>
+              <AppLayout><CreateTicket /></AppLayout>
             </ProtectedRoute>
           } />
 
           <Route path="/tickets/:id" element={
             <ProtectedRoute>
-              <Layout><TicketDetail /></Layout>
+              <AppLayout><TicketDetail /></AppLayout>
             </ProtectedRoute>
+          } />
+
+          <Route path="/admin/usuarios" element={
+            <AdminRoute>
+              <AppLayout><AdminUsers /></AppLayout>
+            </AdminRoute>
           } />
 
           <Route path="*" element={<Navigate to="/" replace />} />

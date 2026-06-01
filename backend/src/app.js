@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes    from './routes/authRoutes.js';
-import ticketRoutes  from './routes/ticketRoutes.js';
+import authRoutes     from './routes/authRoutes.js';
+import ticketRoutes   from './routes/ticketRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
+import adminRoutes    from './routes/adminRoutes.js';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());          // Permite leer JSON en el body de las peticio
 app.use('/api/auth',       authRoutes);
 app.use('/api/tickets',    ticketRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/admin',      adminRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

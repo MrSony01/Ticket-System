@@ -3,25 +3,30 @@ import { createContext, useContext, useState } from 'react';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser]   = useState(() => JSON.parse(localStorage.getItem('user') ?? 'null'));
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [user,    setUser]    = useState(() => JSON.parse(localStorage.getItem('user')    ?? 'null'));
+  const [company, setCompany] = useState(() => JSON.parse(localStorage.getItem('company') ?? 'null'));
+  const [token,   setToken]   = useState(() => localStorage.getItem('token'));
 
-  function login(userData, jwt) {
-    localStorage.setItem('user',  JSON.stringify(userData));
-    localStorage.setItem('token', jwt);
+  function login(userData, jwt, companyData) {
+    localStorage.setItem('user',    JSON.stringify(userData));
+    localStorage.setItem('company', JSON.stringify(companyData));
+    localStorage.setItem('token',   jwt);
     setUser(userData);
+    setCompany(companyData);
     setToken(jwt);
   }
 
   function logout() {
     localStorage.removeItem('user');
+    localStorage.removeItem('company');
     localStorage.removeItem('token');
     setUser(null);
+    setCompany(null);
     setToken(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, company, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
