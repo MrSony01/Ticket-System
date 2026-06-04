@@ -1,0 +1,16 @@
+# Claude Code (configuración local con rutas de máquina)
+.claude/settings.local.json
+
+# Dependencias
+frontend/node_modules/
+backend/node_modules/
+
+# Variables de entorno (contiene contraseñas)
+backend/.env
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Vite
+frontend/dist/
