@@ -2,15 +2,19 @@
 .claude/settings.local.json
 
 # Dependencias
+node_modules/
 frontend/node_modules/
 backend/node_modules/
 
 # Variables de entorno (contiene contraseñas)
+.env
 backend/.env
+*.local
+
+# Build
+dist/
+frontend/dist/
 
 # Sistema operativo
 .DS_Store
 Thumbs.db
-
-# Vite
-frontend/dist/
