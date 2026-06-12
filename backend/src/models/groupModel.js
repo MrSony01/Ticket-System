@@ -23,3 +23,11 @@ export async function create(name, companyId) {
   );
   return result.insertId;
 }
+
+export async function remove(id, companyId) {
+  const [result] = await pool.execute(
+    'DELETE FROM `groups` WHERE id = ? AND company_id = ?',
+    [id, companyId]
+  );
+  return result.affectedRows > 0;
+}

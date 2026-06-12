@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 
 const inputCls =
-  'w-full bg-slate-800 border border-slate-700 text-slate-100 placeholder-slate-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition';
+  'w-full bg-zinc-900 border border-zinc-800 text-zinc-100 placeholder-zinc-600 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition';
 
 const selectCls =
-  'bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition';
+  'bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition';
 
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+      <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
         {label}
       </label>
       {children}
@@ -55,12 +55,19 @@ export default function CreateTicket() {
     }
   }
 
+  const priorityConfig = {
+    low:      { label: 'Baja',     dot: 'bg-zinc-400' },
+    medium:   { label: 'Media',    dot: 'bg-amber-400' },
+    high:     { label: 'Alta',     dot: 'bg-orange-400' },
+    critical: { label: 'Crítica',  dot: 'bg-red-500' },
+  };
+
   return (
     <div className="p-6 lg:p-8 max-w-2xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-100">Nuevo ticket</h1>
-        <p className="text-slate-400 text-sm mt-0.5">Describe el problema con el mayor detalle posible.</p>
+        <h1 className="text-2xl font-bold text-zinc-100">Nuevo ticket</h1>
+        <p className="text-zinc-400 text-sm mt-0.5">Describe el problema con el mayor detalle posible.</p>
       </div>
 
       {error && (
@@ -69,7 +76,7 @@ export default function CreateTicket() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-[#0f0f18] border border-zinc-800 rounded-xl p-6 space-y-5">
         <Field label="Título">
           <input
             name="title"
@@ -95,17 +102,19 @@ export default function CreateTicket() {
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Prioridad">
-            <select
-              name="priority"
-              value={form.priority}
-              onChange={handleChange}
-              className={`${selectCls} w-full`}
-            >
-              <option value="low">Baja</option>
-              <option value="medium">Media</option>
-              <option value="high">Alta</option>
-              <option value="critical">Crítica</option>
-            </select>
+            <div className="relative">
+              <select
+                name="priority"
+                value={form.priority}
+                onChange={handleChange}
+                className={`${selectCls} w-full pl-7`}
+              >
+                {Object.entries(priorityConfig).map(([val, { label }]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+              <span className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${priorityConfig[form.priority].dot}`} />
+            </div>
           </Field>
 
           <Field label="Categoría">
@@ -123,18 +132,18 @@ export default function CreateTicket() {
           </Field>
         </div>
 
-        <div className="flex gap-3 pt-2 border-t border-slate-800">
+        <div className="flex gap-3 pt-2 border-t border-zinc-800">
           <button
             type="submit"
             disabled={loading}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Enviando...' : 'Crear ticket'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            className="text-slate-400 hover:text-slate-200 px-5 py-2.5 rounded-lg text-sm border border-slate-700 hover:border-slate-600 transition-colors"
+            className="text-zinc-400 hover:text-zinc-200 px-5 py-2.5 rounded-lg text-sm border border-zinc-700 hover:border-zinc-600 transition-colors"
           >
             Cancelar
           </button>

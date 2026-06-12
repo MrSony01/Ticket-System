@@ -32,8 +32,9 @@ CREATE TABLE IF NOT EXISTS users (
   group_id   INT,
   name       VARCHAR(150) NOT NULL,
   email      VARCHAR(255) NOT NULL,
-  password   VARCHAR(255) NOT NULL,
-  role       ENUM('user', 'technician', 'admin') NOT NULL DEFAULT 'user',
+  password     VARCHAR(255) NOT NULL,
+  invite_token VARCHAR(64)  DEFAULT NULL,
+  role         ENUM('user', 'technician', 'admin') NOT NULL DEFAULT 'user',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_company_email (company_id, email),
   FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
@@ -57,6 +58,12 @@ CREATE TABLE IF NOT EXISTS tickets (
   FOREIGN KEY (user_id)     REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_tickets_company_status  ON tickets(company_id, status);
+CREATE INDEX IF NOT EXISTS idx_tickets_company_created ON tickets(company_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_tickets_assigned        ON tickets(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_tickets_category        ON tickets(category_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_priority        ON tickets(company_id, priority);
 
 CREATE TABLE IF NOT EXISTS comments (
   id          INT AUTO_INCREMENT PRIMARY KEY,

@@ -1,7 +1,80 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ROLE_LABELS = { user: 'Usuario', technician: 'Técnico', admin: 'Admin' };
+
+const IconTicket = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+  </svg>
+);
+
+const IconKanban = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="11" rx="1"/><rect x="17" y="3" width="5" height="14" rx="1"/>
+  </svg>
+);
+
+const IconGrid = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+    <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+
+const IconUsers = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+);
+
+const IconBuilding = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+  </svg>
+);
+
+const IconLayers = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+    <polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+  </svg>
+);
+
+const IconTag = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+    <line x1="7" y1="7" x2="7.01" y2="7"/>
+  </svg>
+);
+
+const IconSettings = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+);
+
+const IconBarChart = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+);
+
+const IconLogout = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+);
 
 function NavItem({ to, icon, label }) {
   return (
@@ -9,14 +82,14 @@ function NavItem({ to, icon, label }) {
       to={to}
       end
       className={({ isActive }) =>
-        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
           isActive
-            ? 'bg-indigo-600 text-white'
-            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+            ? 'bg-violet-500/15 text-violet-300 border border-violet-500/25 shadow-sm'
+            : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-100 border border-transparent'
         }`
       }
     >
-      <span className="text-lg leading-none">{icon}</span>
+      <span className="shrink-0 opacity-80">{icon}</span>
       {label}
     </NavLink>
   );
@@ -31,58 +104,75 @@ export default function Sidebar() {
     navigate('/login');
   }
 
+  const initials = user?.name
+    ?.split(' ')
+    .slice(0, 2)
+    .map(n => n[0])
+    .join('')
+    .toUpperCase() ?? '?';
+
   return (
-    <aside className="fixed inset-y-0 left-0 w-60 bg-slate-900 border-r border-slate-800 flex flex-col z-30">
+    <aside className="fixed inset-y-0 left-0 w-60 flex flex-col z-30" style={{ background: '#0e0e16', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Brand */}
-      <div className="px-5 py-5 border-b border-slate-800">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">AX</span>
+      <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}>
+            <span className="text-white font-black text-xs tracking-tight">AX</span>
           </div>
-          <div>
-            <p className="text-slate-100 font-bold text-sm leading-tight">AgentX</p>
+          <div className="min-w-0">
+            <p className="text-zinc-100 font-bold text-sm leading-tight tracking-tight">AgentX</p>
             {company && (
-              <p className="text-slate-500 text-xs truncate max-w-[120px]">{company.name}</p>
+              <p className="text-zinc-600 text-[11px] truncate mt-0.5">{company.name}</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider px-3 mb-2">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.15em] px-3 mb-2.5">
           Principal
         </p>
-        <NavItem to="/dashboard"      icon="⊞" label="Dashboard" />
-        <NavItem to="/tickets/new"    icon="＋" label="Nuevo ticket" />
+        <NavItem to="/dashboard"    icon={<IconGrid />}    label="Dashboard" />
+        <NavItem to="/kanban"       icon={<IconKanban />}  label="Kanban" />
+        <NavItem to="/mis-tickets"  icon={<IconTicket />}  label="Mis tickets" />
+        <NavItem to="/tickets/new"  icon={<IconPlus />}    label="Nuevo ticket" />
+
         {user?.role === 'admin' && (
           <>
-            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider px-3 mt-4 mb-2">
-              Admin
+            <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.15em] px-3 mt-6 mb-2.5">
+              Administración
             </p>
-            <NavItem to="/admin/usuarios" icon="◎" label="Usuarios" />
+            <NavItem to="/admin"             icon={<IconBuilding />} label="Empresa" />
+            <NavItem to="/admin/usuarios"  icon={<IconUsers />}    label="Usuarios" />
+            <NavItem to="/admin/grupos"    icon={<IconLayers />}   label="Grupos" />
+            <NavItem to="/admin/categorias" icon={<IconTag />}       label="Categorías" />
+            <NavItem to="/admin/reportes"       icon={<IconBarChart />}  label="Reportes" />
+            <NavItem to="/admin/configuracion"  icon={<IconSettings />}  label="Configuración" />
           </>
         )}
       </nav>
 
       {/* User footer */}
-      <div className="px-3 py-4 border-t border-slate-800">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800/60 mb-2">
-          <div className="w-8 h-8 rounded-full bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center shrink-0">
-            <span className="text-indigo-300 text-xs font-bold">
-              {user?.name?.[0]?.toUpperCase() ?? '?'}
-            </span>
+      <div className="px-3 pb-4 pt-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <Link to="/perfil" className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors hover:bg-white/5 group" style={{ background: 'rgba(255,255,255,0.04)' }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-violet-300 text-xs font-bold" style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(139,92,246,0.3)' }}>
+            {initials}
           </div>
-          <div className="min-w-0">
-            <p className="text-slate-200 text-xs font-semibold truncate">{user?.name}</p>
-            <p className="text-slate-500 text-xs">{ROLE_LABELS[user?.role] ?? user?.role}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-zinc-200 text-xs font-semibold truncate leading-tight group-hover:text-violet-300 transition-colors">{user?.name}</p>
+            <p className="text-zinc-600 text-[11px] mt-0.5">{ROLE_LABELS[user?.role] ?? user?.role}</p>
           </div>
-        </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-700 shrink-0"><path d="M9 18l6-6-6-6"/></svg>
+        </Link>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-red-400 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-zinc-500 hover:text-red-400 border border-transparent hover:border-red-500/20 transition-all duration-150"
+          style={{ ':hover': { background: 'rgba(239,68,68,0.08)' } }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
-          <span>⎋</span>
+          <IconLogout />
           Cerrar sesión
         </button>
       </div>

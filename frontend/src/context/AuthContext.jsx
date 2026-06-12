@@ -8,12 +8,20 @@ export function AuthProvider({ children }) {
   const [token,   setToken]   = useState(() => localStorage.getItem('token'));
 
   function login(userData, jwt, companyData) {
-    localStorage.setItem('user',    JSON.stringify(userData));
-    localStorage.setItem('company', JSON.stringify(companyData));
-    localStorage.setItem('token',   jwt);
+    localStorage.setItem('user',      JSON.stringify(userData));
+    localStorage.setItem('company',   JSON.stringify(companyData));
+    localStorage.setItem('token',     jwt);
     setUser(userData);
     setCompany(companyData);
     setToken(jwt);
+  }
+
+  function updateCompany(partial) {
+    setCompany(prev => {
+      const next = { ...prev, ...partial };
+      localStorage.setItem('company', JSON.stringify(next));
+      return next;
+    });
   }
 
   function logout() {
@@ -26,7 +34,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, company, token, login, logout }}>
+    <AuthContext.Provider value={{ user, company, token, login, logout, updateCompany }}>
       {children}
     </AuthContext.Provider>
   );

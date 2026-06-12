@@ -2,8 +2,11 @@ import * as Ticket from '../models/ticketModel.js';
 
 export async function getTickets(req, res) {
   const { id: userId, role, company_id } = req.user;
-  const tickets = await Ticket.findAll(userId, role, company_id);
-  res.json(tickets);
+  const { status, priority, categoryId, assignedTo, search, page, limit } = req.query;
+  const result = await Ticket.findAll(userId, role, company_id, {
+    status, priority, categoryId, assignedTo, search, page, limit,
+  });
+  res.json(result);
 }
 
 export async function getTicket(req, res) {

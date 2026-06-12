@@ -15,7 +15,10 @@ const TICKET_JOINS = `
   LEFT JOIN users a      ON a.id = t.assigned_to
 `;
 
-export async function findAll(userId, role, companyId) {
+export async function findAll(userId, role, companyId, {
+  status, priority, categoryId, assignedTo, search,
+  page = 1, limit = 20,
+} = {}) {
   let where = 'WHERE t.company_id = ?';
   const params = [companyId];
 
@@ -27,11 +30,26 @@ export async function findAll(userId, role, companyId) {
     params.push(userId);
   }
 
-  const [rows] = await pool.execute(
-    `SELECT ${TICKET_COLS} ${TICKET_JOINS} ${where} ORDER BY t.created_at DESC`,
+  if (status)     { where += ' AND t.status = ?';      params.push(status); }
+  if (priority)   { where += ' AND t.priority = ?';    params.push(priority); }
+  if (categoryId) { where += ' AND t.category_id = ?'; params.push(Number(categoryId)); }
+  if (assignedTo) { where += ' AND t.assigned_to = ?'; params.push(Number(assignedTo)); }
+  if (search)     { where += ' AND t.title LIKE ?';    params.push(`%${search}%`); }
+
+  const offset   = (Math.max(1, Number(page)) - 1) * Number(limit);
+  const pageSize = Math.min(100, Math.max(1, Number(limit)));
+
+  const [[{ total }]] = await pool.execute(
+    `SELECT COUNT(*) AS total ${TICKET_JOINS} ${where}`,
     params
   );
-  return rows;
+
+  const [rows] = await pool.execute(
+    `SELECT ${TICKET_COLS} ${TICKET_JOINS} ${where} ORDER BY t.created_at DESC LIMIT ? OFFSET ?`,
+    [...params, pageSize, offset]
+  );
+
+  return { tickets: rows, total: Number(total), page: Number(page), pages: Math.ceil(Number(total) / pageSize) };
 }
 
 export async function findById(id, companyId) {
