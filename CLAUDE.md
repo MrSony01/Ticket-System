@@ -61,25 +61,34 @@ src/
   app.js                # Express app: CORS, JSON body, error handler, mounts routes
   config/db.js          # mysql2 connection pool
   routes/
-    authRoutes.js       # Mounted at /api/auth
-    ticketRoutes.js     # Mounted at /api/tickets
-    categoryRoutes.js   # Mounted at /api/categories
-    adminRoutes.js      # Mounted at /api/admin — requires admin role
+    authRoutes.js           # Mounted at /api/auth
+    ticketRoutes.js         # Mounted at /api/tickets
+    categoryRoutes.js       # Mounted at /api/categories
+    adminRoutes.js          # Mounted at /api/admin — requires admin role
+    notificationRoutes.js   # Mounted at /api/notifications — requires auth
+    searchRoutes.js         # Mounted at /api/search — requires auth, role-scoped
   controllers/
-    authController.js   # register, login, getMe, updateMe, changePassword, getInvite, acceptInvite
-    ticketController.js
+    authController.js       # register, login, getMe, updateMe, changePassword, getInvite, acceptInvite
+    ticketController.js     # + exportTickets (CSV), activity logging, notifications on assign/status/comment
     categoryController.js
-    adminController.js  # users, groups, stats, company settings, invite
-    reportController.js # getReports — 6-query aggregated analytics
+    adminController.js      # users, groups, stats, company settings, invite + activity logging
+    reportController.js     # getReports — 6-query aggregated analytics
+    activityController.js   # getActivity — paginated audit log
+    notificationController.js # getNotifications, getUnreadCount, markRead, markAllRead
+    slaController.js        # getSLA, updateSLA — per-priority config
+    searchController.js     # globalSearch — tickets + users, role-scoped
   models/
-    userModel.js        # findByEmailGlobal() for slug-free login
-    ticketModel.js      # findAll() with server-side filtering + LIMIT/OFFSET pagination
+    userModel.js            # findByEmailGlobal() for slug-free login
+    ticketModel.js          # findAll() with server-side filtering + LIMIT/OFFSET pagination
     categoryModel.js
-    adminModel.js       # user/group CRUD + getCompany() + updateCompanyName()
-    groupModel.js       # remove() for group deletion
+    adminModel.js           # user/group CRUD + getCompany() + updateCompanyName()
+    groupModel.js           # remove() for group deletion
+    activityModel.js        # log() + findAll() — writes to activity_log table
+    notificationModel.js    # create, findForUser, markRead, markAllRead, countUnread
+    slaModel.js             # findByCompany() with defaults, upsert(), computeOverdue()
   middlewares/
-    authMiddleware.js   # JWT verification + authorize() helper
-    roleMiddleware.js   # Re-exports authorize() for semantic clarity
+    authMiddleware.js       # JWT verification + authorize() helper
+    roleMiddleware.js       # Re-exports authorize() for semantic clarity
 ```
 
 ### Auth API endpoints (`/api/auth`)
@@ -108,6 +117,10 @@ DELETE /groups/:id         # Delete group
 
 GET    /stats              # Company stats: users by role, groups count, tickets by status, categories count
 GET    /reports            # Analytics: byStatus, byPriority, byCategory, byTechnician, overTime (30d), avgResolutionDays
+GET    /activity           # Audit log — paginated, filter by action/entityType
+GET    /sla                # SLA config per priority (defaults: critical=2h/8h, high=8h/24h, medium=24h/72h, low=72h/168h)
+PATCH  /sla                # Update SLA config for a priority { priority, response_hours, resolution_hours }
+GET    /search             # Global search alias (also available at /api/search without admin requirement)
 GET    /company            # Get company info (name, slug, member_count, created_at)
 PATCH  /company            # Update company name — requires admin currentPassword (bcrypt verified)
 ```
@@ -117,10 +130,26 @@ PATCH  /company            # Update company name — requires admin currentPassw
 GET    /                   # List tickets — server-side filters: status, priority, categoryId, assignedTo, search
                            # Pagination: page + limit (max 100). Returns { tickets, total, page, pages }
                            # Role-scoped: user→own, technician→assigned, admin→all
+GET    /export             # Export filtered tickets as CSV (admin only) — same filters as list
 GET    /:id                # Get ticket detail + comments
 POST   /                   # Create ticket
 PATCH  /:id                # Update ticket (status, priority, assigned_to, category_id) — role-restricted
 POST   /:id/comments       # Add comment (is_internal for tech/admin only)
+```
+
+### Notification API endpoints (`/api/notifications`)
+```
+GET    /            # List notifications for current user (query: ?unreadOnly=true)
+GET    /unread      # Count of unread notifications { count }
+PATCH  /read-all    # Mark all as read
+PATCH  /:id/read    # Mark single notification as read
+```
+
+### Search API endpoint (`/api/search`)
+```
+GET    /?q=<term>   # Search tickets + users within company, role-scoped (min 2 chars)
+                    # Returns { tickets: [...], users: [...] }
+                    # users array is empty for role=user
 ```
 
 ### Frontend structure (`frontend/src/`)
@@ -132,15 +161,17 @@ api/client.js             # Fetch wrapper — reads token from localStorage, BAS
 context/
   AuthContext.jsx          # user, company, token, login(), logout(), updateCompany()
 components/
-  Sidebar.jsx              # Fixed 240px sidebar — SVG icons, violet accent, user footer → /perfil
+  Sidebar.jsx              # Fixed 240px sidebar — NotificationBell + Ctrl+K search trigger + SVG icons
   ProtectedRoute.jsx
   AdminRoute.jsx
+  NotificationBell.jsx     # Bell icon with unread badge, dropdown panel, polls every 30s
+  GlobalSearch.jsx         # Ctrl+K command palette — debounced search, keyboard nav (↑↓↵ESC)
 pages/
   Landing.jsx              # Public landing page (violet theme)
   Login.jsx                # Centered card — email + password only
   Register.jsx             # Centered card — company + user registration
   AcceptInvite.jsx         # /invite/:token — set password on first login
-  Dashboard.jsx            # Server-side filters (status/priority/category/search) + pagination (PAGE_SIZE=20)
+  Dashboard.jsx            # Server-side filters + pagination + CSV export button + SLA overdue badges
   CreateTicket.jsx         # Dark theme, priority dot indicator
   TicketDetail.jsx         # Two-column layout: content + metadata panel, technician dropdown
   MyTickets.jsx            # /mis-tickets — tickets assigned to current user, paginated
@@ -152,6 +183,8 @@ pages/
   AdminCategories.jsx      # /admin/categorias — CRUD categories
   AdminReports.jsx         # /admin/reportes — Recharts: donut, bar, line, stacked bar charts
   AdminSettings.jsx        # /admin/configuracion — change company name (password-protected)
+  AdminActivity.jsx        # /admin/actividad — paginated audit log, filter by action type
+  AdminSLA.jsx             # /admin/sla — SLA config per priority, inline edit with validation
 ```
 
 ### Design system
@@ -166,7 +199,11 @@ pages/
 ### Database schema notes
 - `users.invite_token VARCHAR(64)` — set on invite, cleared on accept
 - DB indexes: `idx_tickets_company_status`, `idx_tickets_company_created`, `idx_tickets_assigned`, `idx_tickets_category`, `idx_tickets_priority`
-- Startup migration in `server.js` — `ALTER TABLE users ADD COLUMN IF NOT EXISTS invite_token` runs on every boot (idempotent)
+- Startup migration in `server.js` — runs on every boot (idempotent), creates:
+  - `ALTER TABLE users ADD COLUMN IF NOT EXISTS invite_token`
+  - `activity_log (id, company_id, user_id, action, entity_type, entity_id, metadata JSON, created_at)`
+  - `notifications (id, user_id, company_id, type, title, message, entity_id, read_at, created_at)`
+  - `sla_configs (id, company_id, priority, response_hours, resolution_hours)` — UNIQUE on (company_id, priority)
 
 ### Environment variables
 Backend reads from `backend/.env`:
@@ -188,22 +225,30 @@ JWT_SECRET=supersecretkey123
 - Full Docker setup (db + backend + frontend/nginx)
 - Auth: register, login, invite flow, profile edit, password change
 - Tickets: CRUD, comments, internal notes, role-based visibility, technician dropdown assignment
-- Dashboard: server-side filtering (status, priority, category, search) + pagination
+- Dashboard: server-side filtering (status, priority, category, search) + pagination + CSV export + SLA badges
 - Kanban: drag-and-drop board with optimistic status updates
 - MyTickets: `/mis-tickets` — scoped view for the logged-in user
 - Categories: CRUD (admin only)
+- Activity logging: auto-logged on ticket create/update/comment, user create/invite/delete/role-change
+- Notifications in-app: bell icon + 30s polling, auto-created on ticket assign / status change / comment
+- SLA per priority: configurable response + resolution hours, overdue/breach badges in Dashboard
+- Global search Ctrl+K: command palette with debounce, keyboard nav, role-scoped results
+- CSV export: `GET /api/tickets/export` with same filters as dashboard list
 - Admin panel:
   - `/admin` — stats (users, groups, categories, tickets) + groups visualization
   - `/admin/usuarios` — user table, create user, invite via link, detail modal (role/group/delete)
   - `/admin/grupos` — expandable groups with member management
   - `/admin/categorias` — category CRUD
   - `/admin/reportes` — analytics with Recharts (status donut, priority bar, timeline, category bar, technician workload)
+  - `/admin/actividad` — paginated audit log, filterable by action type
+  - `/admin/sla` — SLA config per priority with inline editing
   - `/admin/configuracion` — change company name (requires password confirmation)
 - User profile: `/perfil` — edit name/email + change password, accessible from sidebar user footer
 
 **Pending (next session):**
-- Log de actividad (`/admin/actividad`) — audit trail of all system events
-- Notificaciones in-app — bell icon + polling, ticket assignment/comment events
-- SLA por prioridad — define response time targets, overdue indicators
-- Búsqueda global Ctrl+K — command palette for tickets and users
-- Exportar CSV — download filtered tickets from dashboard/reports
+- Email notifications (nodemailer) — ticket assign + comment events via SMTP
+- SLA overdue indicator in TicketDetail page
+- Ticket change history timeline in TicketDetail (reuses activity_log data)
+- Rate limiting (express-rate-limit) on auth endpoints
+- README with screenshots for portfolio
+- Landing page polish

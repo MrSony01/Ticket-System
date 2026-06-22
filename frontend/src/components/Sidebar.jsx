@@ -1,5 +1,6 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const ROLE_LABELS = { user: 'Usuario', technician: 'Técnico', admin: 'Admin' };
 
@@ -69,6 +70,18 @@ const IconBarChart = () => (
   </svg>
 );
 
+const IconActivity = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
+);
+
+const IconClock = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+  </svg>
+);
+
 const IconLogout = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -95,7 +108,7 @@ function NavItem({ to, icon, label }) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ onSearchOpen }) {
   const { user, company, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -114,18 +127,32 @@ export default function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 w-60 flex flex-col z-30" style={{ background: '#0e0e16', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Brand */}
-      <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="px-4 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}>
             <span className="text-white font-black text-xs tracking-tight">AX</span>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-zinc-100 font-bold text-sm leading-tight tracking-tight">AgentX</p>
             {company && (
               <p className="text-zinc-600 text-[11px] truncate mt-0.5">{company.name}</p>
             )}
           </div>
+          <NotificationBell />
         </div>
+
+        {/* Ctrl+K search trigger */}
+        <button
+          onClick={onSearchOpen}
+          className="mt-3 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-600 text-xs transition-colors hover:text-zinc-400"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <span className="flex-1 text-left">Buscar...</span>
+          <kbd className="text-[10px] bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">⌘K</kbd>
+        </button>
       </div>
 
       {/* Nav */}
@@ -147,8 +174,10 @@ export default function Sidebar() {
             <NavItem to="/admin/usuarios"  icon={<IconUsers />}    label="Usuarios" />
             <NavItem to="/admin/grupos"    icon={<IconLayers />}   label="Grupos" />
             <NavItem to="/admin/categorias" icon={<IconTag />}       label="Categorías" />
-            <NavItem to="/admin/reportes"       icon={<IconBarChart />}  label="Reportes" />
-            <NavItem to="/admin/configuracion"  icon={<IconSettings />}  label="Configuración" />
+            <NavItem to="/admin/reportes"      icon={<IconBarChart />}  label="Reportes" />
+            <NavItem to="/admin/actividad"     icon={<IconActivity />}  label="Actividad" />
+            <NavItem to="/admin/sla"           icon={<IconClock />}     label="SLA" />
+            <NavItem to="/admin/configuracion" icon={<IconSettings />}  label="Configuración" />
           </>
         )}
       </nav>

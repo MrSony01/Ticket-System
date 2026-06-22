@@ -16,18 +16,36 @@ import AdminGroups from './pages/AdminGroups';
 import AdminCategories from './pages/AdminCategories';
 import AdminReports   from './pages/AdminReports';
 import AdminSettings  from './pages/AdminSettings';
+import AdminActivity  from './pages/AdminActivity';
+import AdminSLA       from './pages/AdminSLA';
 import UserProfile    from './pages/UserProfile';
 import MyTickets      from './pages/MyTickets';
 import Kanban         from './pages/Kanban';
-import AcceptInvite from './pages/AcceptInvite';
+import AcceptInvite   from './pages/AcceptInvite';
+import GlobalSearch   from './components/GlobalSearch';
+import { useState, useEffect } from 'react';
 
 function AppLayout({ children }) {
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(v => !v);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   return (
     <div className="min-h-screen flex" style={{ background: '#080810' }}>
-      <Sidebar />
+      <Sidebar onSearchOpen={() => setSearchOpen(true)} />
       <main className="ml-60 flex-1 min-h-screen overflow-y-auto">
         {children}
       </main>
+      {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
     </div>
   );
 }
@@ -116,6 +134,18 @@ export default function App() {
           <Route path="/admin/configuracion" element={
             <AdminRoute>
               <AppLayout><AdminSettings /></AppLayout>
+            </AdminRoute>
+          } />
+
+          <Route path="/admin/actividad" element={
+            <AdminRoute>
+              <AppLayout><AdminActivity /></AppLayout>
+            </AdminRoute>
+          } />
+
+          <Route path="/admin/sla" element={
+            <AdminRoute>
+              <AppLayout><AdminSLA /></AppLayout>
             </AdminRoute>
           } />
 

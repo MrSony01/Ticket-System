@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes     from './routes/authRoutes.js';
-import ticketRoutes   from './routes/ticketRoutes.js';
-import categoryRoutes from './routes/categoryRoutes.js';
-import adminRoutes    from './routes/adminRoutes.js';
+import authRoutes         from './routes/authRoutes.js';
+import ticketRoutes       from './routes/ticketRoutes.js';
+import categoryRoutes     from './routes/categoryRoutes.js';
+import adminRoutes        from './routes/adminRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import searchRoutes       from './routes/searchRoutes.js';
 
 dotenv.config();
 
@@ -15,10 +17,12 @@ app.use(cors());                  // Permite peticiones desde el frontend
 app.use(express.json());          // Permite leer JSON en el body de las peticiones
 
 // Rutas
-app.use('/api/auth',       authRoutes);
-app.use('/api/tickets',    ticketRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/admin',      adminRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/tickets',       ticketRoutes);
+app.use('/api/categories',    categoryRoutes);
+app.use('/api/admin',         adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/search',        searchRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

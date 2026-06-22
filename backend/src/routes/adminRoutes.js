@@ -2,7 +2,10 @@ import { Router } from 'express';
 import { authenticate } from '../middlewares/authMiddleware.js';
 import { authorize }    from '../middlewares/roleMiddleware.js';
 import { getUsers, createUser, createInvite, updateRole, updateUserGroup, deleteUser, getGroups, createGroup, deleteGroup, getStats, getCompanySettings, updateCompanySettings } from '../controllers/adminController.js';
-import { getReports } from '../controllers/reportController.js';
+import { getReports }  from '../controllers/reportController.js';
+import { getActivity } from '../controllers/activityController.js';
+import { getSLA, updateSLA } from '../controllers/slaController.js';
+import { globalSearch } from '../controllers/searchController.js';
 
 const router = Router();
 
@@ -14,14 +17,20 @@ router.post('/users',            createUser);
 router.post('/users/invite',     createInvite);
 router.patch('/users/:id/role',  updateRole);
 router.patch('/users/:id/group', updateUserGroup);
-router.delete('/users/:id',     deleteUser);
+router.delete('/users/:id',      deleteUser);
 
 router.get('/groups',        getGroups);
 router.post('/groups',       createGroup);
 router.delete('/groups/:id', deleteGroup);
 
-router.get('/stats',   getStats);
-router.get('/reports', getReports);
+router.get('/stats',    getStats);
+router.get('/reports',  getReports);
+router.get('/activity', getActivity);
+
+router.get('/sla',    getSLA);
+router.patch('/sla',  updateSLA);
+
+router.get('/search', globalSearch);
 
 router.get('/company',   getCompanySettings);
 router.patch('/company', updateCompanySettings);

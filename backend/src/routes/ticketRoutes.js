@@ -7,14 +7,16 @@ import {
   createTicket,
   updateTicket,
   commentTicket,
+  exportTickets,
 } from '../controllers/ticketController.js';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.get('/',    getTickets);
-router.get('/:id', getTicket);
+router.get('/',        getTickets);
+router.get('/export',  authorize('admin'), exportTickets);
+router.get('/:id',     getTicket);
 
 router.post('/', authorize('user', 'technician', 'admin'), createTicket);
 

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import * as Admin from '../models/adminModel.js';
 import * as Group from '../models/groupModel.js';
+import * as Activity from '../models/activityModel.js';
 import pool from '../config/db.js';
 
 const VALID_ROLES = ['user', 'technician', 'admin'];
@@ -59,6 +60,12 @@ export async function createUser(req, res) {
       name, email, hashedPassword, role,
       companyId: company_id,
       groupId: resolvedGroupId,
+    });
+
+    Activity.log({
+      companyId: company_id, userId: req.user.id, action: 'user_created',
+      entityType: 'user', entityId: userId,
+      metadata: { name, email, role },
     });
 
     res.status(201).json({ id: userId, name, email, role, group_id: resolvedGroupId, group_name: resolvedGroupName });
@@ -174,6 +181,12 @@ export async function updateRole(req, res) {
     const updated = await Admin.updateUserRole(id, company_id, role);
     if (!updated) return res.status(404).json({ message: 'Usuario no encontrado.' });
 
+    Activity.log({
+      companyId: company_id, userId: req.user.id, action: 'role_changed',
+      entityType: 'user', entityId: Number(id),
+      metadata: { new_role: role },
+    });
+
     res.json({ message: 'Rol actualizado.' });
   } catch (err) {
     console.error('[admin:updateRole]', err);
@@ -204,6 +217,12 @@ export async function createInvite(req, res) {
       role, companyId: company_id, groupId: group_id ?? null,
     });
     await pool.execute('UPDATE users SET invite_token = ? WHERE id = ?', [invite_token, userId]);
+
+    Activity.log({
+      companyId: company_id, userId: req.user.id, action: 'user_invited',
+      entityType: 'user', entityId: userId,
+      metadata: { name, email, role },
+    });
 
     res.status(201).json({ id: userId, name, email, role, invite_token });
   } catch (err) {
@@ -263,6 +282,11 @@ export async function deleteUser(req, res) {
 
     const deleted = await Admin.deleteUser(id, company_id);
     if (!deleted) return res.status(404).json({ message: 'Usuario no encontrado.' });
+
+    Activity.log({
+      companyId: company_id, userId: req.user.id, action: 'user_deleted',
+      entityType: 'user', entityId: Number(id),
+    });
 
     res.json({ message: 'Usuario eliminado.' });
   } catch (err) {
