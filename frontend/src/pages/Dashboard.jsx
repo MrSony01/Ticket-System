@@ -129,16 +129,25 @@ export default function Dashboard() {
     api.get('/categories').then(setCategories).catch(() => {});
     if (user?.role === 'admin') {
       api.get('/admin/sla').then(setSlaMap).catch(() => {});
+      api.get('/admin/stats').then(s => {
+        setCounts({
+          open:        s.tickets.open        ?? 0,
+          in_progress: s.tickets.in_progress ?? 0,
+          resolved:    s.tickets.resolved    ?? 0,
+          closed:      s.tickets.closed      ?? 0,
+        });
+      }).catch(() => {});
+    } else {
+      api.get('/tickets?limit=100').then(r => {
+        const all = r.tickets ?? [];
+        setCounts({
+          open:        all.filter(t => t.status === 'open').length,
+          in_progress: all.filter(t => t.status === 'in_progress').length,
+          resolved:    all.filter(t => t.status === 'resolved').length,
+          closed:      all.filter(t => t.status === 'closed').length,
+        });
+      }).catch(() => {});
     }
-    api.get('/tickets?limit=0&page=1').then(r => {
-      const all = r.tickets ?? [];
-      setCounts({
-        open:        all.filter(t => t.status === 'open').length,
-        in_progress: all.filter(t => t.status === 'in_progress').length,
-        resolved:    all.filter(t => t.status === 'resolved').length,
-        closed:      all.filter(t => t.status === 'closed').length,
-      });
-    }).catch(() => {});
   }, []);
 
   const fetchTickets = useCallback(() => {

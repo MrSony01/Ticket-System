@@ -18,14 +18,14 @@ const TOOLTIP_STYLE = {
   cursor: { fill: 'rgba(255,255,255,0.04)' },
 };
 
-const AXIS_STYLE = { fill: '#52525b', fontSize: 11 };
+const AXIS_STYLE = { fill: '#a1a1aa', fontSize: 11 };
 
 function ChartCard({ title, subtitle, children, loading }) {
   return (
     <div className="rounded-2xl p-5" style={{ background: '#0f0f18', border: '1px solid rgba(255,255,255,0.07)' }}>
       <div className="mb-4">
         <p className="text-zinc-200 font-bold text-sm">{title}</p>
-        {subtitle && <p className="text-zinc-600 text-xs mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-zinc-400 text-xs mt-0.5">{subtitle}</p>}
       </div>
       {loading ? (
         <div className="flex items-center gap-2 text-zinc-700 py-8 justify-center">
@@ -40,8 +40,8 @@ function KpiCard({ label, value, color, sub }) {
   return (
     <div className="rounded-2xl p-5 flex flex-col" style={{ background: '#0f0f18', border: '1px solid rgba(255,255,255,0.07)' }}>
       <p className="text-3xl font-black tabular-nums" style={{ color, letterSpacing: '-0.02em' }}>{value ?? '—'}</p>
-      <p className="text-xs font-bold text-zinc-600 uppercase tracking-widest mt-1">{label}</p>
-      {sub && <p className="text-xs text-zinc-700 mt-2">{sub}</p>}
+      <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">{label}</p>
+      {sub && <p className="text-xs text-zinc-500 mt-2">{sub}</p>}
     </div>
   );
 }
@@ -74,13 +74,13 @@ export default function AdminReports() {
     <div className="p-6 lg:p-8 max-w-6xl">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-1">Administración</p>
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Administración</p>
         <h1 className="text-2xl font-black text-zinc-100 tracking-tight">Reportes</h1>
         <p className="text-zinc-500 text-sm mt-0.5">Métricas y tendencias de tu empresa.</p>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 mb-6">{error}</div>
+        <div role="alert" className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 mb-6">{error}</div>
       )}
 
       {/* KPI row */}
@@ -126,7 +126,7 @@ export default function AdminReports() {
                 ))}
               </div>
             </div>
-          ) : <p className="text-zinc-700 text-sm py-4 text-center">Sin datos</p>}
+          ) : <p className="text-zinc-500 text-sm py-4 text-center">Sin datos</p>}
         </ChartCard>
 
         <ChartCard title="Tickets por prioridad" loading={loading}>
@@ -142,7 +142,7 @@ export default function AdminReports() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          ) : <p className="text-zinc-700 text-sm py-4 text-center">Sin datos</p>}
+          ) : <p className="text-zinc-500 text-sm py-4 text-center">Sin datos</p>}
         </ChartCard>
       </div>
 
@@ -159,7 +159,7 @@ export default function AdminReports() {
                 <Line type="monotone" dataKey="count" stroke="#7c3aed" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: '#a78bfa' }} />
               </LineChart>
             </ResponsiveContainer>
-          ) : <p className="text-zinc-700 text-sm py-4 text-center">Sin actividad en los últimos 30 días</p>}
+          ) : <p className="text-zinc-500 text-sm py-4 text-center">Sin actividad en los últimos 30 días</p>}
         </ChartCard>
       </div>
 
@@ -176,7 +176,7 @@ export default function AdminReports() {
                 <Bar dataKey="count" fill="#7c3aed" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          ) : <p className="text-zinc-700 text-sm py-4 text-center">Sin datos</p>}
+          ) : <p className="text-zinc-500 text-sm py-4 text-center">Sin datos</p>}
         </ChartCard>
 
         <ChartCard title="Carga por técnico" subtitle="Top 10 técnicos" loading={loading}>
@@ -193,7 +193,7 @@ export default function AdminReports() {
                 <Bar dataKey="resolved"    name="Resueltos"    fill="#34d399" radius={[0, 4, 4, 0]} stackId="a" />
               </BarChart>
             </ResponsiveContainer>
-          ) : <p className="text-zinc-700 text-sm py-4 text-center">Ningún ticket asignado aún</p>}
+          ) : <p className="text-zinc-500 text-sm py-4 text-center">Ningún ticket asignado aún</p>}
         </ChartCard>
       </div>
     </div>

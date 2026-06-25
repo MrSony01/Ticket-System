@@ -6,6 +6,23 @@ import { useAuth } from '../context/AuthContext';
 const STATUS_LABELS   = { open: 'Abierto', in_progress: 'En progreso', resolved: 'Resuelto', closed: 'Cerrado' };
 const PRIORITY_LABELS = { low: 'Baja', medium: 'Media', high: 'Alta', critical: 'Crítica' };
 
+const SLA_DEFAULTS = {
+  low:      { response_hours: 72,  resolution_hours: 168 },
+  medium:   { response_hours: 24,  resolution_hours: 72  },
+  high:     { response_hours: 8,   resolution_hours: 24  },
+  critical: { response_hours: 2,   resolution_hours: 8   },
+};
+
+function computeSLA(ticket, slaMap) {
+  if (!ticket || ['resolved', 'closed'].includes(ticket.status)) return null;
+  const sla = slaMap?.[ticket.priority];
+  if (!sla) return null;
+  const elapsedHrs = (Date.now() - new Date(ticket.created_at).getTime()) / 3_600_000;
+  if (elapsedHrs > sla.resolution_hours) return { kind: 'overdue', elapsed: Math.round(elapsedHrs), limit: sla.resolution_hours };
+  if (elapsedHrs > sla.response_hours)   return { kind: 'breach',  elapsed: Math.round(elapsedHrs), limit: sla.resolution_hours };
+  return null;
+}
+
 const STATUS_STYLES = {
   open:        'bg-blue-500/12 text-blue-400 border border-blue-500/25',
   in_progress: 'bg-amber-500/12 text-amber-400 border border-amber-500/25',
@@ -72,6 +89,7 @@ export default function TicketDetail() {
   const [isInternal,  setIsInternal]  = useState(false);
   const [saving,      setSaving]      = useState(false);
   const [technicians, setTechnicians] = useState([]);
+  const [slaMap,      setSlaMap]      = useState(SLA_DEFAULTS);
 
   const isAdmin      = user?.role === 'admin';
   const isTechnician = user?.role === 'technician';
@@ -95,6 +113,7 @@ export default function TicketDetail() {
     api.get('/admin/users')
       .then(users => setTechnicians(users.filter(u => u.role === 'technician' || u.role === 'admin')))
       .catch(() => {});
+    api.get('/admin/sla').then(setSlaMap).catch(() => {});
   }, [isAdmin]);
 
   async function handleStatusChange(e) {
@@ -270,6 +289,31 @@ export default function TicketDetail() {
           {/* Metadata card */}
           <div className="rounded-2xl px-5 py-4" style={{ background: '#0f0f18', border: '1px solid rgba(255,255,255,0.07)' }}>
             <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest mb-1">Detalles</p>
+
+            {(() => {
+              const sla = computeSLA(ticket, slaMap);
+              if (!sla) return null;
+              const isOverdue = sla.kind === 'overdue';
+              return (
+                <div
+                  className="rounded-lg px-3 py-2 mb-3 flex items-center gap-2"
+                  style={isOverdue
+                    ? { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }
+                    : { background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)' }
+                  }
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isOverdue ? '#ef4444' : '#fbbf24'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold" style={{ color: isOverdue ? '#ef4444' : '#fbbf24' }}>
+                      {isOverdue ? 'Resolución vencida' : 'Respuesta vencida'}
+                    </p>
+                    <p className="text-[10px] text-zinc-500">{sla.elapsed}h transcurridas · límite {sla.limit}h</p>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="mt-1">
               <MetaRow label="Estado"   value={<span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_STYLES[ticket.status]}`}>{STATUS_LABELS[ticket.status]}</span>} />

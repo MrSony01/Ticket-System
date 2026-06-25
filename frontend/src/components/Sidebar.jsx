@@ -102,13 +102,13 @@ function NavItem({ to, icon, label }) {
         }`
       }
     >
-      <span className="shrink-0 opacity-80">{icon}</span>
+      <span className="shrink-0 opacity-80" aria-hidden="true">{icon}</span>
       {label}
     </NavLink>
   );
 }
 
-export default function Sidebar({ onSearchOpen }) {
+export default function Sidebar({ onSearchOpen, onClose, isOpen }) {
   const { user, company, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -125,29 +125,43 @@ export default function Sidebar({ onSearchOpen }) {
     .toUpperCase() ?? '?';
 
   return (
-    <aside className="fixed inset-y-0 left-0 w-60 flex flex-col z-30" style={{ background: '#0e0e16', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+    <aside
+      className={`fixed inset-y-0 left-0 w-60 flex flex-col z-30 transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+      style={{ background: '#0e0e16', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+    >
       {/* Brand */}
       <div className="px-4 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}>
+          <div aria-hidden="true" className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}>
             <span className="text-white font-black text-xs tracking-tight">AX</span>
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-zinc-100 font-bold text-sm leading-tight tracking-tight">AgentX</p>
             {company && (
-              <p className="text-zinc-600 text-[11px] truncate mt-0.5">{company.name}</p>
+              <p className="text-zinc-400 text-[11px] truncate mt-0.5">{company.name}</p>
             )}
           </div>
           <NotificationBell />
+          {/* Close button — mobile only */}
+          <button
+            onClick={onClose}
+            aria-label="Cerrar menú"
+            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 shrink-0"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
 
         {/* Ctrl+K search trigger */}
         <button
           onClick={onSearchOpen}
-          className="mt-3 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-600 text-xs transition-colors hover:text-zinc-400"
+          aria-label="Abrir búsqueda global"
+          className="mt-3 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 text-xs transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
           style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <span className="flex-1 text-left">Buscar...</span>
@@ -156,8 +170,8 @@ export default function Sidebar({ onSearchOpen }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.15em] px-3 mb-2.5">
+      <nav aria-label="Menú principal" className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em] px-3 mb-2.5">
           Principal
         </p>
         <NavItem to="/dashboard"    icon={<IconGrid />}    label="Dashboard" />
@@ -167,7 +181,7 @@ export default function Sidebar({ onSearchOpen }) {
 
         {user?.role === 'admin' && (
           <>
-            <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.15em] px-3 mt-6 mb-2.5">
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.15em] px-3 mt-6 mb-2.5">
               Administración
             </p>
             <NavItem to="/admin"             icon={<IconBuilding />} label="Empresa" />
@@ -190,14 +204,13 @@ export default function Sidebar({ onSearchOpen }) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-zinc-200 text-xs font-semibold truncate leading-tight group-hover:text-violet-300 transition-colors">{user?.name}</p>
-            <p className="text-zinc-600 text-[11px] mt-0.5">{ROLE_LABELS[user?.role] ?? user?.role}</p>
+            <p className="text-zinc-400 text-[11px] mt-0.5">{ROLE_LABELS[user?.role] ?? user?.role}</p>
           </div>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-700 shrink-0"><path d="M9 18l6-6-6-6"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
         </Link>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-zinc-500 hover:text-red-400 border border-transparent hover:border-red-500/20 transition-all duration-150"
-          style={{ ':hover': { background: 'rgba(239,68,68,0.08)' } }}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-zinc-400 hover:text-red-400 border border-transparent hover:border-red-500/20 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >

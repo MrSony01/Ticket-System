@@ -155,21 +155,31 @@ GET    /?q=<term>   # Search tickets + users within company, role-scoped (min 2 
 ### Frontend structure (`frontend/src/`)
 ```
 main.jsx                  # React root mount
-App.jsx                   # Router + AuthProvider + Layout
+App.jsx                   # Router + AuthProvider + AppLayout wrapper
+                          # AppLayout: skip link (#main-content), mobile top bar (hamburger),
+                          # mobile overlay backdrop, sidebar open/close state, Escape key handler,
+                          # auto-close on route change, <main id="main-content" tabIndex={-1}>
 index.css                 # Tailwind directives + scrollbar + dark body (#080810)
 api/client.js             # Fetch wrapper — reads token from localStorage, BASE = '/api'
 context/
   AuthContext.jsx          # user, company, token, login(), logout(), updateCompany()
 components/
-  Sidebar.jsx              # Fixed 240px sidebar — NotificationBell + Ctrl+K search trigger + SVG icons
+  Sidebar.jsx              # Fixed 240px sidebar, mobile: slide-in via translate-x, transition-transform
+                          # <aside> + <nav aria-label="Menú principal"> + section labels (PRINCIPAL/ADMINISTRACIÓN)
+                          # NotificationBell (aria-label, aria-expanded) + Ctrl+K search trigger (aria-label)
+                          # Mobile close button (aria-label="Cerrar menú") + all icons aria-hidden="true"
+                          # NavItem: icon aria-hidden, link text always visible (no icon-only)
   ProtectedRoute.jsx
   AdminRoute.jsx
   NotificationBell.jsx     # Bell icon with unread badge, dropdown panel, polls every 30s
+                          # aria-label="Notificaciones", aria-expanded, aria-haspopup
   GlobalSearch.jsx         # Ctrl+K command palette — debounced search, keyboard nav (↑↓↵ESC)
 pages/
   Landing.jsx              # Public landing page (violet theme)
-  Login.jsx                # Centered card — email + password only
-  Register.jsx             # Centered card — company + user registration
+  Login.jsx                # Centered card — visible labels (htmlFor/id), password toggle (eye icon),
+                          # error div role="alert", success banner on ?registered=1
+  Register.jsx             # Centered card — visible labels (htmlFor/id), password toggle (eye icon),
+                          # error div role="alert", slug preview from company name
   AcceptInvite.jsx         # /invite/:token — set password on first login
   Dashboard.jsx            # Server-side filters + pagination + CSV export button + SLA overdue badges
   CreateTicket.jsx         # Dark theme, priority dot indicator
@@ -244,6 +254,14 @@ JWT_SECRET=supersecretkey123
   - `/admin/sla` — SLA config per priority with inline editing
   - `/admin/configuracion` — change company name (requires password confirmation)
 - User profile: `/perfil` — edit name/email + change password, accessible from sidebar user footer
+- Accessibility & UX pass:
+  - Login + Register: visible `<label htmlFor>` above every field (not placeholder-only), password show/hide toggle (eye icon, `aria-label`), error messages with `role="alert"`
+  - All forms across the app: `role="alert"` on error divs (CreateTicket, AdminReports, etc.)
+  - Layout: skip-to-content link (`<a href="#main-content" className="sr-only focus:not-sr-only">`), `<main id="main-content" tabIndex={-1}>`
+  - Sidebar: `<nav aria-label="Menú principal">`, all icon SVGs `aria-hidden="true"`, nav item text always visible
+  - NotificationBell: `aria-label="Notificaciones"`, `aria-expanded`, `aria-haspopup`
+  - Search trigger: `aria-label="Abrir búsqueda global"`
+  - Mobile responsive sidebar: slide-in drawer via `transition-transform translate-x`, backdrop overlay (`bg-black/60`), hamburger toggle in mobile top bar (`aria-label="Abrir menú de navegación"`), close button inside sidebar (`aria-label="Cerrar menú"`), auto-close on route change and Escape key
 
 **Pending (next session):**
 - Email notifications (nodemailer) — ticket assign + comment events via SMTP

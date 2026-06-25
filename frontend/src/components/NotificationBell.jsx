@@ -89,15 +89,17 @@ export default function NotificationBell() {
     <div className="relative" ref={panelRef}>
       <button
         onClick={handleOpen}
-        className="relative w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors"
-        title="Notificaciones"
+        aria-label={count > 0 ? `Notificaciones, ${count} sin leer` : 'Notificaciones'}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        className="relative w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
         {count > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-violet-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+          <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-violet-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
             {count > 9 ? '9+' : count}
           </span>
         )}
@@ -105,6 +107,8 @@ export default function NotificationBell() {
 
       {open && (
         <div
+          role="dialog"
+          aria-label="Notificaciones"
           className="absolute right-0 top-10 w-80 rounded-xl shadow-2xl z-50 overflow-hidden"
           style={{ background: '#0f0f18', border: '1px solid rgba(255,255,255,0.08)' }}
         >
@@ -112,7 +116,7 @@ export default function NotificationBell() {
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span className="text-zinc-100 text-sm font-semibold">Notificaciones</span>
             {count > 0 && (
-              <button onClick={handleMarkAll} className="text-[11px] text-violet-400 hover:text-violet-300 transition-colors">
+              <button onClick={handleMarkAll} className="text-[11px] text-violet-400 hover:text-violet-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded">
                 Marcar todo como leído
               </button>
             )}
@@ -125,7 +129,10 @@ export default function NotificationBell() {
             )}
             {!loading && notifications.length === 0 && (
               <div className="px-4 py-8 text-center">
-                <div className="text-zinc-600 text-2xl mb-2">🔔</div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 mx-auto mb-2" aria-hidden="true">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
                 <p className="text-zinc-500 text-sm">Sin notificaciones</p>
               </div>
             )}
@@ -141,7 +148,7 @@ export default function NotificationBell() {
                   <p className="text-zinc-200 text-xs font-medium leading-tight">{n.title}</p>
                   {n.message && <p className="text-zinc-500 text-[11px] mt-0.5 truncate">{n.message}</p>}
                 </div>
-                <span className="text-zinc-600 text-[10px] shrink-0 mt-0.5">{timeAgo(n.created_at)}</span>
+                <span className="text-zinc-400 text-[10px] shrink-0 mt-0.5">{timeAgo(n.created_at)}</span>
               </button>
             ))}
           </div>

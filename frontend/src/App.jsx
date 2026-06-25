@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -26,14 +26,21 @@ import GlobalSearch   from './components/GlobalSearch';
 import { useState, useEffect } from 'react';
 
 function AppLayout({ children }) {
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchOpen, setSidebarSearch] = useState(false);
+  const [sidebarOpen, setSidebarOpen]  = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     function onKey(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchOpen(v => !v);
+        setSidebarSearch(v => !v);
       }
+      if (e.key === 'Escape') setSidebarOpen(false);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -41,11 +48,47 @@ function AppLayout({ children }) {
 
   return (
     <div className="min-h-screen flex" style={{ background: '#080810' }}>
-      <Sidebar onSearchOpen={() => setSearchOpen(true)} />
-      <main className="ml-60 flex-1 min-h-screen overflow-y-auto">
+      {/* Skip link — keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:z-50 focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-violet-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-medium focus:outline-none"
+      >
+        Saltar al contenido principal
+      </a>
+
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 bg-black/60 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onSearchOpen={() => { setSidebarSearch(true); setSidebarOpen(false); }}
+      />
+
+      <main id="main-content" tabIndex={-1} className="flex-1 min-h-screen overflow-y-auto md:ml-60 focus:outline-none">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 h-14 sticky top-0 z-10" style={{ background: '#080810', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Abrir menú de navegación"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <span className="text-zinc-100 font-bold text-sm tracking-tight">AgentX</span>
+        </div>
         {children}
       </main>
-      {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
+
+      {searchOpen && <GlobalSearch onClose={() => setSidebarSearch(false)} />}
     </div>
   );
 }
