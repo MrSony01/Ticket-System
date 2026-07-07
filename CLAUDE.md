@@ -105,7 +105,8 @@ POST  /invite/:token      # Accept invite — set password, clears invite_token
 ### Admin API endpoints (`/api/admin`)
 ```
 GET    /users              # List all company users (with group info + invite_pending flag)
-POST   /users              # Create user (name, email, password, role, group_id)
+POST   /users              # Create user (name, email, password, role, group_id). Alternatively pass
+                           # group_name instead of group_id — auto-creates the group if it doesn't exist
 POST   /users/invite       # Create invite-only user — generates invite_token, no password required
 PATCH  /users/:id/role     # Change user role
 PATCH  /users/:id/group    # Assign/remove user from group (group_id: null to remove)
@@ -123,6 +124,13 @@ PATCH  /sla                # Update SLA config for a priority { priority, respon
 GET    /search             # Global search alias (also available at /api/search without admin requirement)
 GET    /company            # Get company info (name, slug, member_count, created_at)
 PATCH  /company            # Update company name — requires admin currentPassword (bcrypt verified)
+```
+
+### Category API endpoints (`/api/categories`)
+```
+GET    /            # List categories for the company (any authenticated role)
+POST   /            # Create category { name } (admin only)
+DELETE /:id         # Delete category (admin only)
 ```
 
 ### Ticket API endpoints (`/api/tickets`)
@@ -207,6 +215,13 @@ pages/
 - **Priority colors:** zinc=low, blue=medium, orange=high, red=critical
 
 ### Database schema notes
+- Base schema lives in `database/init.sql` (loaded via Docker entrypoint on first `db` container run):
+  - `companies (id, name, slug UNIQUE, created_at)`
+  - `groups (id, company_id, name, created_at)` — UNIQUE (company_id, name)
+  - `categories (id, company_id, name, created_at)` — UNIQUE (company_id, name)
+  - `users (id, company_id, group_id, name, email, password, invite_token, role ENUM('user','technician','admin'), created_at)` — UNIQUE (company_id, email)
+  - `tickets (id, company_id, title, description, status ENUM('open','in_progress','resolved','closed'), priority ENUM('low','medium','high','critical'), category_id, user_id, assigned_to, created_at, updated_at)`
+  - `comments (id, ticket_id, user_id, content, is_internal, created_at)`
 - `users.invite_token VARCHAR(64)` — set on invite, cleared on accept
 - DB indexes: `idx_tickets_company_status`, `idx_tickets_company_created`, `idx_tickets_assigned`, `idx_tickets_category`, `idx_tickets_priority`
 - Startup migration in `server.js` — runs on every boot (idempotent), creates:
@@ -229,6 +244,8 @@ JWT_SECRET=supersecretkey123
 
 `DB_HOST=db` uses the Docker service name. Change to `localhost` for local dev without Docker.
 
+⚠️ **Known issue:** `backend/.env` is currently tracked in git (`git ls-files` confirms it) even though `.gitignore` lists it — it was committed before that rule was added, so the real `JWT_SECRET` and DB password are sitting in git history right now. Left as-is for now by explicit user decision (2026-07-07); rotate the secret and untrack the file (`git rm --cached backend/.env`) before any public deploy.
+
 ### Current implementation status
 
 **Working:**
@@ -241,7 +258,7 @@ JWT_SECRET=supersecretkey123
 - Categories: CRUD (admin only)
 - Activity logging: auto-logged on ticket create/update/comment, user create/invite/delete/role-change
 - Notifications in-app: bell icon + 30s polling, auto-created on ticket assign / status change / comment
-- SLA per priority: configurable response + resolution hours, overdue/breach badges in Dashboard
+- SLA per priority: configurable response + resolution hours, overdue/breach badges in Dashboard and TicketDetail
 - Global search Ctrl+K: command palette with debounce, keyboard nav, role-scoped results
 - CSV export: `GET /api/tickets/export` with same filters as dashboard list
 - Admin panel:
@@ -263,10 +280,20 @@ JWT_SECRET=supersecretkey123
   - Search trigger: `aria-label="Abrir búsqueda global"`
   - Mobile responsive sidebar: slide-in drawer via `transition-transform translate-x`, backdrop overlay (`bg-black/60`), hamburger toggle in mobile top bar (`aria-label="Abrir menú de navegación"`), close button inside sidebar (`aria-label="Cerrar menú"`), auto-close on route change and Escape key
 
-**Pending (next session):**
+**Pending (next session — finishing the demo):**
 - Email notifications (nodemailer) — ticket assign + comment events via SMTP
-- SLA overdue indicator in TicketDetail page
 - Ticket change history timeline in TicketDetail (reuses activity_log data)
 - Rate limiting (express-rate-limit) on auth endpoints
 - README with screenshots for portfolio
 - Landing page polish
+
+**Future roadmap (post-portfolio — only if launching this as a real, even free, product):**
+- File attachments on tickets — no upload capability exists today (no multer/storage layer); needed before any real launch
+- Rotate `JWT_SECRET` out of the committed `.env` and into a real secret before any public deploy
+- Backups of the production database (Railway or equivalent)
+- Error tracking / monitoring (e.g. Sentry)
+- Privacy policy + terms of service, account/company deletion flow (stores third-party PII)
+- Canned responses / reply templates for technicians
+- CSAT survey on ticket close
+- Per-company branding (logo/color) since this is multi-tenant SaaS
+- Webhooks / integrations (Slack, Teams) and email-to-ticket ingestion
