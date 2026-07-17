@@ -12,6 +12,8 @@ dotenv.config();
 
 const app = express();
 
+app.set('trust proxy', 1); // Railway corre la app detrás de un proxy inverso
+
 // Middlewares globales
 app.use(cors());                  // Permite peticiones desde el frontend
 app.use(express.json());          // Permite leer JSON en el body de las peticiones
