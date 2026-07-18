@@ -38,6 +38,30 @@ const PRIORITY_DOT = {
   low: 'bg-zinc-500', medium: 'bg-blue-400', high: 'bg-orange-400', critical: 'bg-red-500',
 };
 
+const ACTIVITY_DOT = {
+  ticket_created: 'bg-emerald-500',
+  ticket_updated: 'bg-blue-500',
+  comment_added:  'bg-violet-500',
+};
+
+function describeActivity(entry) {
+  const meta = entry.metadata
+    ? (typeof entry.metadata === 'string' ? JSON.parse(entry.metadata) : entry.metadata)
+    : null;
+
+  if (entry.action === 'ticket_created') return 'creó el ticket';
+  if (entry.action === 'comment_added')  return 'agregó un comentario';
+  if (entry.action === 'ticket_updated' && meta) {
+    const parts = [];
+    if (meta.status)   parts.push(`estado a "${STATUS_LABELS[meta.status] ?? meta.status}"`);
+    if (meta.priority) parts.push(`prioridad a "${PRIORITY_LABELS[meta.priority] ?? meta.priority}"`);
+    if (meta.assigned_to !== undefined) parts.push(meta.assigned_to ? 'reasignó el ticket' : 'quitó la asignación');
+    if (meta.category_id !== undefined) parts.push('cambió la categoría');
+    return parts.length ? `actualizó ${parts.join(', ')}` : 'actualizó el ticket';
+  }
+  return 'realizó una acción';
+}
+
 const selectCls =
   'w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition text-zinc-200'
   + ' bg-transparent border border-zinc-800 hover:border-zinc-700';
@@ -83,6 +107,7 @@ export default function TicketDetail() {
   const navigate = useNavigate();
 
   const [ticket,      setTicket]      = useState(null);
+  const [activity,    setActivity]    = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState('');
   const [comment,     setComment]     = useState('');
@@ -97,8 +122,12 @@ export default function TicketDetail() {
 
   async function load() {
     try {
-      const data = await api.get(`/tickets/${id}`);
+      const [data, activityData] = await Promise.all([
+        api.get(`/tickets/${id}`),
+        api.get(`/tickets/${id}/activity`),
+      ]);
       setTicket(data);
+      setActivity(activityData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -280,6 +309,38 @@ export default function TicketDetail() {
                 </button>
               </div>
             </form>
+          </div>
+
+          {/* History timeline */}
+          <div className="rounded-2xl p-5" style={{ background: '#0f0f18', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-xs font-bold text-zinc-600 uppercase tracking-widest mb-4">
+              Historial · {activity.length}
+            </p>
+            {activity.length === 0 ? (
+              <p className="text-sm text-zinc-600">Sin actividad registrada.</p>
+            ) : (
+              <ul className="space-y-4">
+                {activity.map((entry, i) => (
+                  <li key={entry.id} className="flex gap-3">
+                    <div className="flex flex-col items-center shrink-0">
+                      <span className={`w-2 h-2 rounded-full mt-1 ${ACTIVITY_DOT[entry.action] ?? 'bg-zinc-600'}`} />
+                      {i < activity.length - 1 && (
+                        <span className="w-px flex-1 mt-1" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 pb-1">
+                      <p className="text-xs text-zinc-300">
+                        <span className="font-semibold text-zinc-200">{entry.user_name ?? 'Sistema'}</span>
+                        {' '}{describeActivity(entry)}
+                      </p>
+                      <p className="text-[10px] text-zinc-600 mt-0.5">
+                        {new Date(entry.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 
