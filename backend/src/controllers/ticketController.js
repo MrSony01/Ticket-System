@@ -1,6 +1,8 @@
 import * as Ticket from '../models/ticketModel.js';
 import * as Activity from '../models/activityModel.js';
 import * as Notif from '../models/notificationModel.js';
+import * as User from '../models/userModel.js';
+import { sendMail } from '../services/emailService.js';
 import pool from '../config/db.js';
 
 export async function getTickets(req, res) {
@@ -86,6 +88,15 @@ export async function updateTicket(req, res) {
       message: `Se te ha asignado el ticket #${id}`,
       entityId: Number(id),
     });
+    User.findById(fields.assigned_to, company_id).then(assignee => {
+      if (assignee?.email) {
+        sendMail({
+          to: assignee.email,
+          subject: `Ticket asignado #${id}`,
+          html: `<p>Se te ha asignado el ticket <strong>#${id}</strong>.</p>`,
+        });
+      }
+    });
   }
 
   // Notify when status changes
@@ -99,6 +110,15 @@ export async function updateTicket(req, res) {
         title: 'Estado de ticket actualizado',
         message: `Tu ticket #${id} cambió a "${fields.status}"`,
         entityId: Number(id),
+      });
+      User.findById(ticket.creator_id, company_id).then(creator => {
+        if (creator?.email) {
+          sendMail({
+            to: creator.email,
+            subject: `Actualización de ticket #${id}`,
+            html: `<p>Tu ticket <strong>#${id}</strong> cambió a "${fields.status}".</p>`,
+          });
+        }
       });
     }
   }
@@ -139,6 +159,15 @@ export async function commentTicket(req, res) {
       message: `Hay un nuevo comentario en tu ticket #${ticketId}`,
       entityId: Number(ticketId),
     });
+    User.findById(ticket.creator_id, company_id).then(creator => {
+      if (creator?.email) {
+        sendMail({
+          to: creator.email,
+          subject: `Nuevo comentario en ticket #${ticketId}`,
+          html: `<p>Hay un nuevo comentario en tu ticket <strong>#${ticketId}</strong>.</p>`,
+        });
+      }
+    });
   }
 
   // Notify assignee (if exists and is not the commenter)
@@ -150,6 +179,15 @@ export async function commentTicket(req, res) {
       title: 'Nuevo comentario',
       message: `Hay un nuevo comentario en el ticket #${ticketId}`,
       entityId: Number(ticketId),
+    });
+    User.findById(ticket.assignee_id, company_id).then(assignee => {
+      if (assignee?.email) {
+        sendMail({
+          to: assignee.email,
+          subject: `Nuevo comentario en ticket #${ticketId}`,
+          html: `<p>Hay un nuevo comentario en el ticket <strong>#${ticketId}</strong>.</p>`,
+        });
+      }
     });
   }
 
