@@ -34,6 +34,24 @@ export async function getTicket(req, res) {
   res.json(ticket);
 }
 
+export async function getTicketActivity(req, res) {
+  const { id: userId, role, company_id } = req.user;
+  const { id } = req.params;
+
+  const ticket = await Ticket.findById(id, company_id);
+  if (!ticket) return res.status(404).json({ message: 'Ticket no encontrado.' });
+
+  if (role === 'user' && ticket.creator_id !== userId) {
+    return res.status(403).json({ message: 'No tienes permiso para ver este ticket.' });
+  }
+  if (role === 'technician' && ticket.assignee_id !== userId) {
+    return res.status(403).json({ message: 'No tienes permiso para ver este ticket.' });
+  }
+
+  const logs = await Activity.findForEntity(company_id, 'ticket', Number(id));
+  res.json(logs);
+}
+
 export async function createTicket(req, res) {
   const { id: userId, company_id } = req.user;
   const { title, description, priority, categoryId } = req.body;

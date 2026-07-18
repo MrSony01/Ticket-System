@@ -13,6 +13,19 @@ export async function log({ companyId, userId, action, entityType, entityId, met
   }
 }
 
+export async function findForEntity(companyId, entityType, entityId) {
+  const [rows] = await pool.execute(
+    `SELECT a.id, a.action, a.entity_type, a.entity_id, a.metadata, a.created_at,
+            u.name AS user_name, u.role AS user_role
+     FROM activity_log a
+     LEFT JOIN users u ON u.id = a.user_id
+     WHERE a.company_id = ? AND a.entity_type = ? AND a.entity_id = ?
+     ORDER BY a.created_at ASC`,
+    [companyId, entityType, entityId]
+  );
+  return rows;
+}
+
 export async function findAll(companyId, { page = 1, limit = 50, action, entityType } = {}) {
   const offset = (Math.max(1, Number(page)) - 1) * Math.min(100, Number(limit));
   const pageSize = Math.min(100, Math.max(1, Number(limit)));

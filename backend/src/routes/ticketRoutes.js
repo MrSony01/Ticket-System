@@ -4,6 +4,7 @@ import { authorize }    from '../middlewares/roleMiddleware.js';
 import {
   getTickets,
   getTicket,
+  getTicketActivity,
   createTicket,
   updateTicket,
   commentTicket,
@@ -14,9 +15,10 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/',        getTickets);
-router.get('/export',  authorize('admin'), exportTickets);
-router.get('/:id',     getTicket);
+router.get('/',            getTickets);
+router.get('/export',      authorize('admin'), exportTickets);
+router.get('/:id',         getTicket);
+router.get('/:id/activity', getTicketActivity);
 
 router.post('/', authorize('user', 'technician', 'admin'), createTicket);
 
