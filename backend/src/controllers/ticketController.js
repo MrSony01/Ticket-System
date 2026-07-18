@@ -48,7 +48,16 @@ export async function getTicketActivity(req, res) {
     return res.status(403).json({ message: 'No tienes permiso para ver este ticket.' });
   }
 
-  const logs = await Activity.findForEntity(company_id, 'ticket', Number(id));
+  let logs = await Activity.findForEntity(company_id, 'ticket', Number(id));
+
+  if (role === 'user') {
+    logs = logs.filter(log => {
+      if (log.action !== 'comment_added' || !log.metadata) return true;
+      const meta = typeof log.metadata === 'string' ? JSON.parse(log.metadata) : log.metadata;
+      return !meta.is_internal;
+    });
+  }
+
   res.json(logs);
 }
 
