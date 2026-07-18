@@ -96,7 +96,7 @@ export async function updateTicket(req, res) {
           html: `<p>Se te ha asignado el ticket <strong>#${id}</strong>.</p>`,
         });
       }
-    });
+    }).catch(() => {});
   }
 
   // Notify when status changes
@@ -119,7 +119,7 @@ export async function updateTicket(req, res) {
             html: `<p>Tu ticket <strong>#${id}</strong> cambió a "${fields.status}".</p>`,
           });
         }
-      });
+      }).catch(() => {});
     }
   }
 
@@ -167,7 +167,7 @@ export async function commentTicket(req, res) {
           html: `<p>Hay un nuevo comentario en tu ticket <strong>#${ticketId}</strong>.</p>`,
         });
       }
-    });
+    }).catch(() => {});
   }
 
   // Notify assignee (if exists and is not the commenter)
@@ -188,7 +188,7 @@ export async function commentTicket(req, res) {
           html: `<p>Hay un nuevo comentario en el ticket <strong>#${ticketId}</strong>.</p>`,
         });
       }
-    });
+    }).catch(() => {});
   }
 
   res.status(201).json({ id: commentId });
