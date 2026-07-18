@@ -279,13 +279,14 @@ JWT_SECRET=supersecretkey123
   - NotificationBell: `aria-label="Notificaciones"`, `aria-expanded`, `aria-haspopup`
   - Search trigger: `aria-label="Abrir búsqueda global"`
   - Mobile responsive sidebar: slide-in drawer via `transition-transform translate-x`, backdrop overlay (`bg-black/60`), hamburger toggle in mobile top bar (`aria-label="Abrir menú de navegación"`), close button inside sidebar (`aria-label="Cerrar menú"`), auto-close on route change and Escape key
+- Email notifications: nodemailer + Ethereal (fake SMTP), sent on ticket assign / status change / comment — preview URLs logged to the backend console (no real credentials involved)
+- Ticket history timeline: `GET /api/tickets/:id/activity` (reuses `activity_log`), rendered in TicketDetail below the comments thread
+- Rate limiting: `express-rate-limit` on `POST /api/auth/login`, trusts Railway's proxy, skips counting successful logins
+- README with screenshots for portfolio (`docs/screenshots/*.png`)
+- Landing page: accessibility parity pass (`aria-hidden` on decorative icons), dead-class cleanup
 
 **Pending (next session — finishing the demo):**
-- Email notifications (nodemailer) — ticket assign + comment events via SMTP
-- Ticket change history timeline in TicketDetail (reuses activity_log data)
-- Rate limiting (express-rate-limit) on auth endpoints
-- README with screenshots for portfolio
-- Landing page polish
+- Deploy to Railway
 
 **Future roadmap (post-portfolio — only if launching this as a real, even free, product):**
 - File attachments on tickets — no upload capability exists today (no multer/storage layer); needed before any real launch

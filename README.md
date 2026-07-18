@@ -31,6 +31,20 @@ Multi-tenant SaaS ticket management system. Portfolio project built with React, 
 - **Accessibility pass** — visible labels, `aria-*` attributes, skip-to-content link, keyboard navigation
 - **Responsive UI** — mobile sidebar drawer, dark SaaS theme
 
+## Screenshots
+
+| Landing | Dashboard |
+|---|---|
+| ![Landing](docs/screenshots/landing.png) | ![Dashboard](docs/screenshots/dashboard.png) |
+
+| Kanban | Ticket detail |
+|---|---|
+| ![Kanban](docs/screenshots/kanban.png) | ![Ticket detail](docs/screenshots/ticket-detail.png) |
+
+| Reports | SLA configuration |
+|---|---|
+| ![Reports](docs/screenshots/reports.png) | ![SLA](docs/screenshots/sla.png) |
+
 ## Roles
 
 | Role | Access |
@@ -95,9 +109,9 @@ ticket-system/
 - [x] Kanban board, activity log, notifications, SLA, global search, CSV export
 - [x] Accessibility pass (labels, aria attributes, keyboard nav, mobile sidebar)
 - [x] SLA overdue indicator in TicketDetail page
-- [ ] Email notifications (nodemailer) for assign/comment events
-- [ ] Ticket change-history timeline in TicketDetail
-- [ ] Rate limiting on auth endpoints
+- [x] Rate limiting on auth endpoints
+- [x] Email notifications (nodemailer, Ethereal) for assign/status/comment events
+- [x] Ticket change-history timeline in TicketDetail
 - [ ] Deploy to Railway
 
 ## Future roadmap (beyond the demo)
